@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Questionnaire Page</title>
+    <title>Küsimuste loomine</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -31,7 +31,8 @@
         }
 
         .question-container input,
-        .question-container textarea {
+        .question-container textarea,
+        .question-container select {
             width: 100%;
             padding: 8px;
             margin: 5px 0;
@@ -67,7 +68,7 @@
         }
 
         .clear-button {
-            background-color: #f44336; /* Red */
+            background-color: #f44336;
             margin-top: 10px;
         }
 
@@ -83,95 +84,98 @@
         .next-button:hover {
             background-color: #007B9A;
         }
-
-        /* Styling for the circle and text */
-        .circle {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            border: 1px solid #000;
-            display: inline-block;
-            margin-right: 10px;
-        }
-
-        .line {
-            border-top: 1px solid #000;
-            margin: 10px 0;
-            width: 100%;
-            height: 20px; /* Gives enough space for writing */
-        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h2>Create Your Test</h2>
+        <h2>Loo oma test</h2>
     </div>
 
     <div class="question-container">
-        <label for="question">Enter your question:</label>
-        <input type="text" id="question" placeholder="Type your question here">
+        <label for="question">Sisestage küsimus:</label>
+        <input type="text" id="question" placeholder="Sisestage oma küsimus siia">
 
-        <label for="type">Select question type:</label>
+        <label for="type">Valige küsimuse tüüp:</label>
         <select id="type">
-            <option value="multiple-choice">Multiple Choice</option>
-            <option value="translation">Translation</option>
-            <option value="open-ended">Open-ended</option>
+            <option value="multiple-choice">Valikvastustega</option>
+            <option value="translation">Tõlkimine</option>
+            <option value="open-ended">Avatud vastus</option>
+            <option value="true-false">Õige/Väär</option>
+            <option value="rating">Hinnang (1–5)</option>
         </select>
 
         <div id="options-container" class="options-container">
-            <!-- This will dynamically show input fields for multiple-choice options -->
+            <!-- See näitab dünaamiliselt valikvastuste sisendeid -->
         </div>
 
-        <button class="button" onclick="addQuestion()">Add Question</button>
-        <button class="button clear-button" onclick="clearQuestions()">Clear Questions</button>
+        <button class="button" onclick="addQuestion()">Lisa küsimus</button>
+        <button class="button clear-button" onclick="clearQuestions()">Kustuta küsimused</button>
     </div>
 
     <div id="questionPreview" class="question-preview">
-        <!-- Display the preview of added questions -->
+        <!-- Lisatud küsimuste eelvaade -->
     </div>
 
-    <button class="button next-button" onclick="goToPrintable()">Go to Printable</button>
+    <button class="button next-button" onclick="goToPrintable()">Mine prinditavale lehele</button>
 </div>
 
 <script>
-    // Function to dynamically add options input for multiple choice
+    // Function to dynamically add options input for different question types
     function updateOptions() {
         const questionType = document.getElementById('type').value;
         const optionsContainer = document.getElementById('options-container');
-
         optionsContainer.innerHTML = ''; // Clear options container
 
         if (questionType === 'multiple-choice') {
-            // Create input fields for multiple-choice options
+            // Add four input fields for multiple-choice options
             for (let i = 1; i <= 4; i++) {
                 const input = document.createElement('input');
                 input.className = 'option-input';
                 input.type = 'text';
-                input.placeholder = `Option ${i}`;
+                input.placeholder = `Valik ${i}`;
                 input.id = `option${i}`;
                 optionsContainer.appendChild(input);
             }
-        } else if (questionType === 'translation' || questionType === 'open-ended') {
-            // Create a line for translation or open-ended questions
-            const line = document.createElement('div');
-            line.className = 'line';
-            optionsContainer.appendChild(line);
+        } else if (questionType === 'true-false') {
+            // Create true/false options
+            const trueOption = document.createElement('input');
+            trueOption.type = 'radio';
+            trueOption.name = 'true-false';
+            trueOption.value = 'True';
+            const falseOption = document.createElement('input');
+            falseOption.type = 'radio';
+            falseOption.name = 'true-false';
+            falseOption.value = 'False';
+            optionsContainer.appendChild(document.createTextNode('Õige'));
+            optionsContainer.appendChild(trueOption);
+            optionsContainer.appendChild(document.createTextNode('Väär'));
+            optionsContainer.appendChild(falseOption);
+        } else if (questionType === 'rating') {
+            // Add rating scale (1-5)
+            for (let i = 1; i <= 5; i++) {
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = 'rating';
+                input.value = i;
+                optionsContainer.appendChild(document.createTextNode(`${i}`));
+                optionsContainer.appendChild(input);
+            }
         }
     }
 
-    // Call the function to update options based on the selected question type
+    // Call updateOptions when the page loads and when the question type changes
     document.getElementById('type').addEventListener('change', updateOptions);
-    updateOptions();  // Call on page load to initialize options based on the default type
+    updateOptions();
 
-    // Function to add a question to the localStorage
+    // Add a question to localStorage
     function addQuestion() {
         const questionText = document.getElementById('question').value;
         const questionType = document.getElementById('type').value;
 
         if (!questionText) {
-            alert("Please enter a question.");
+            alert("Sisestage küsimus.");
             return;
         }
 
@@ -181,6 +185,10 @@
                 const option = document.getElementById(`option${i}`).value;
                 if (option) options.push(option);
             }
+            if (options.length < 2) {
+                alert("Valikvastustega küsimustel peab olema vähemalt 2 valikut.");
+                return;
+            }
         }
 
         const newQuestion = {
@@ -189,61 +197,52 @@
             options: options
         };
 
-        // Get existing questions from localStorage or create a new array if none exist
         let questions = JSON.parse(localStorage.getItem('testQuestions')) || [];
-        
-        // Check to make sure the limit (e.g., 5 questions) is not exceeded
-        if (questions.length >= 5) {
-            alert("You can only add up to 5 questions.");
-            return;
-        }
-
         questions.push(newQuestion);
-
-        // Save the updated questions array to localStorage
         localStorage.setItem('testQuestions', JSON.stringify(questions));
-
-        // Show preview of added questions
         previewQuestions();
     }
 
-    // Function to preview all added questions
+    // Display questions preview
     function previewQuestions() {
         const questions = JSON.parse(localStorage.getItem('testQuestions')) || [];
         const previewContainer = document.getElementById('questionPreview');
-        previewContainer.innerHTML = ''; // Clear the preview container
+        previewContainer.innerHTML = '';
 
         questions.forEach((question, index) => {
             const questionElement = document.createElement('div');
-            questionElement.innerHTML = `<strong>Q${index + 1}: </strong>${question.question}`;
+            questionElement.innerHTML = `<strong>Küsimus ${index + 1}:</strong> ${question.question}`;
 
             if (question.type === 'multiple-choice') {
                 question.options.forEach(option => {
-                    questionElement.innerHTML += `<br><span class="circle"></span> ${option}`;
+                    questionElement.innerHTML += `<br>- ${option}`;
                 });
+            } else if (question.type === 'true-false') {
+                questionElement.innerHTML += `<br>- Õige<br>- Väär`;
+            } else if (question.type === 'rating') {
+                questionElement.innerHTML += `<br>1-5: (Hinnake küsimust)`;
             } else if (question.type === 'translation' || question.type === 'open-ended') {
-                questionElement.innerHTML += `<br><div class="line"></div>`;  // For translation and open-ended questions, add a line
+                questionElement.innerHTML += `<br><em>Spetsiifiline küsimuse tüüp</em>`;
             }
 
             previewContainer.appendChild(questionElement);
         });
     }
 
-    // Function to clear all questions from localStorage
+    // Clear all questions
     function clearQuestions() {
-        if (confirm("Are you sure you want to clear all questions?")) {
+        if (confirm("Kas olete kindel, et soovite kõik küsimused kustutada?")) {
             localStorage.removeItem('testQuestions');
-            previewQuestions(); // Update preview after clearing
+            previewQuestions();
         }
     }
 
-    // Function to go to printable page
+    // Navigate to printable page
     function goToPrintable() {
-        // Navigate to the printable page (third page)
-        window.location.href = 'printable.html'; // Change this if needed
+        window.location.href = 'printable.html';
     }
 
-    // Call to display the preview questions initially
+    // Initialize preview
     previewQuestions();
 </script>
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="et">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -97,8 +97,8 @@
 
 <div class="container">
     <div class="header">
-        <div class="name">Name: _______________________</div>
-        <div class="date">Date: _______________________</div>
+        <div class="name">Name:</div>
+        <div class="date">Date:</div>
     </div>
 
     <div id="questions-container">
@@ -117,7 +117,7 @@
     questions.forEach((question, index) => {
         const questionContainer = document.createElement('div');
         questionContainer.classList.add('question-container');
-        questionContainer.innerHTML = `<span>Q${index + 1}:</span> ${question.question}`;
+        questionContainer.innerHTML = `<span>Question ${index + 1}:</span> ${question.question}`;
 
         if (question.type === 'multiple-choice') {
             const optionsContainer = document.createElement('div');
@@ -138,6 +138,21 @@
                 line.classList.add('line');
                 questionContainer.appendChild(line);
             }
+        } else if (question.type === 'true-false') {
+            // For True/False questions, add "True" or "False" options
+            const optionsContainer = document.createElement('div');
+            optionsContainer.classList.add('answer-options');
+            optionsContainer.innerHTML = `<span><span class="circle"></span> True</span>
+                                           <span><span class="circle"></span> False</span>`;
+            questionContainer.appendChild(optionsContainer);
+        } else if (question.type === 'rating') {
+            // For Rating questions, add options 1 to 5
+            const optionsContainer = document.createElement('div');
+            optionsContainer.classList.add('answer-options');
+            for (let i = 1; i <= 5; i++) {
+                optionsContainer.innerHTML += `<span><span class="circle"></span> Rating ${i}</span>`;
+            }
+            questionContainer.appendChild(optionsContainer);
         }
 
         questionsContainer.appendChild(questionContainer);
